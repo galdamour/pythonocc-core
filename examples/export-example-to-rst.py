@@ -28,6 +28,20 @@ import subprocess
 
 os.environ["PYTHONOCC_OFFSCREEN_RENDERER"] = "1"
 os.environ["PYTHONOCC_OFFSCREEN_RENDERER_DUMP_IMAGE"] = "1"
+os.environ["PYTHONOCC_OFFSCREEN_RENDERER_DUMP_IMAGE_PATH"] = os.path.join("images", "screenshots")
+
+def get_screenshots_for_example(example_name):
+    """ look into the screenshots folder, and returns
+    file names
+    """
+    all_screenshots = glob.glob(os.path.join('images', 'screenshots', 'capture-core_*.jpeg'))
+    print(all_screenshots)
+    base_name = os.path.splitext(example_name)[0]
+    r = []
+    for screenshot_name in all_screenshots:
+        if base_name in screenshot_name:
+            r.append(screenshot_name)
+    return r
 
 def get_all_available_examples():
     all_examples_file_names = glob.glob(os.path.join('.', 'core_*.py'))
@@ -62,7 +76,6 @@ def run_example(example_name):
     Execute the test from a subprocess, call all functions if any,
     get the screenshots generated from the offscreen renderer.
     """
-    print("running %s ..." % example_name, end="")
     try:
         out = subprocess.check_output([sys.executable, example_name],
                                       stderr=subprocess.STDOUT,
@@ -83,21 +96,26 @@ def export_example_to_rst(example_name):
     rst_file.write("============\n\n")
     ## write abstract
     rst_file.write("Abstract\n---\n\n")
+    rst_file.write("to do\n\n")
     ## launch
     rst_file.write("Howto launch the example ::\n\n")
     rst_file.write("  $ python %s\n" % example_name)
     ## output
     #rst_file.write()
+    ## screenshots
+    rst_file.write("\nExample output\n---\n\n")
+    for image_file in get_screenshots_for_example(example_name):
+        print(image_file)
+        rst_file.write(".. image:: images/screenshots/%s\n\n" % image_file)
     ## code
-    rst_file.write("Code\n\n")
+    rst_file.write("\nCode\n---\n\n")
     example_content = open(example_name, "r").readlines()
-    for line_of_code in example_content:
+    for line_of_code in example_content[17:]:
         rst_file.write("  %s" % line_of_code)
     rst_file.close()
 
-#assert get_example_category("core_visualization_overpaint_viewer.py") == "visualization"
 
-#examples = get_all_available_examples()
-#print(examples)
-run_example('core_helloworld.py')
-export_example_to_rst('core_helloworld.py')
+examples = get_all_available_examples()
+for example in examples:
+    run_example(example)
+    export_example_to_rst(example)
